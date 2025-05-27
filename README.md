@@ -1,1 +1,170 @@
-# janaina
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coração de Fogo com Fogos</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+            overflow: hidden;
+        }
+        canvas {
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="heartCanvas" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Função para obter pontos do contorno do coração
+        function getHeartPoints() {
+            const points = [];
+            const steps = 1000;
+            for (let t = 0; t <= 1; t += 1 / steps) {
+                const x1 = 200 * Math.pow(Math.sin(t * Math.PI * 2), 3);
+                const y1 = 13 * Math.cos(t * Math.PI * 2) - 5 * Math.cos(2 * t * Math.PI * 2) - 2 * Math.cos(3 * t * Math.PI * 2) - Math.cos(4 * t * Math.PI * 2);
+                points.push({ x: 200 + x1, y: 220 - y1 * 10 });
+            }
+            return points;
+        }
+
+        const heartPoints = getHeartPoints();
+        let currentPointIndex = 0;
+
+        class FireParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 3 + 2;
+                this.life = Math.random() * 20 + 20;
+                this.color = `hsl(${Math.random() * 60}, 100%, ${Math.random() * 50 + 50}%)`;
+            }
+
+            update() {
+                this.life -= 1;
+                this.size *= 0.95;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life / 40;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        let fireParticles = [];
+
+        function drawHeartContour() {
+            ctx.beginPath();
+            ctx.moveTo(heartPoints[0].x, heartPoints[0].y);
+            for (let i = 1; i <= currentPointIndex; i++) {
+                ctx.lineTo(heartPoints[i % heartPoints.length].x, heartPoints[i % heartPoints.length].y);
+            }
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function drawNames() {
+            ctx.font = '32px Arial';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.fillText('JANAINA', 200, 200);
+            ctx.fillText('E CIUMENTA', 200, 240);
+        }
+
+        class FireworkParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 5 + 2;
+                this.speedX = Math.random() * 6 - 3;
+                this.speedY = Math.random() * 6 - 3;
+                this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                this.life = 100;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.speedY += 0.1;
+                this.life -= 2;
+                this.size *= 0.98;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.life / 100;
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        let fireworksParticles = [];
+
+        function createFirework() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height / 2;
+            for (let i = 0; i < 30; i++) {
+                fireworksParticles.push(new FireworkParticle(x, y));
+            }
+        }
+
+        function animate() {
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (currentPointIndex < heartPoints.length) {
+                const { x, y } = heartPoints[currentPointIndex];
+                for (let i = 0; i < 5; i++) {
+                    fireParticles.push(new FireParticle(x, y));
+                }
+                currentPointIndex += 5;
+            }
+
+            fireParticles = fireParticles.filter(p => p.life > 0);
+            fireParticles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            drawHeartContour();
+            drawNames();
+
+            fireworksParticles = fireworksParticles.filter(p => p.life > 0);
+            fireworksParticles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            if (Math.random() < 0.1) {
+                createFirework();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function init() {
+            animate();
+        }
+
+        init();
+    </script>
+</body>
+</html>
